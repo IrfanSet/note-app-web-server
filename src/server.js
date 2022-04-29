@@ -1,6 +1,6 @@
 const hapi = require('@hapi/hapi');
-const route = require('./route');
-
+const notes = require('./api/notes');
+const NotesServices = require('./services/inMemory/NotesService');
 
 const server = hapi.server({
     port : 5000,
@@ -13,7 +13,14 @@ const server = hapi.server({
 })
 async function start() {
     try{
-        server.route(route);
+        const notesServices = new NotesServices();
+
+        await server.register({
+            plugin: notes,
+            options: {
+                service: notesServices
+            } 
+        });
         await server.start();
     } catch(err) {
         console.log(err);
