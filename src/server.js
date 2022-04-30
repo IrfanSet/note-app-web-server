@@ -1,6 +1,7 @@
 const hapi = require('@hapi/hapi');
 const notes = require('./api/notes');
 const NotesServices = require('./services/inMemory/NotesService');
+const NotesValidator = require('./validator/notes');
 
 const server = hapi.server({
     port : 5000,
@@ -18,7 +19,8 @@ async function start() {
         await server.register({
             plugin: notes,
             options: {
-                service: notesServices
+                service: notesServices,
+                validator: NotesValidator
             } 
         });
         await server.start();
