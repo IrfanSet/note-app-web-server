@@ -53,7 +53,7 @@ class NotesServices{
         this._notes[index] = {...this._notes[index], title, body, tags, updatedAt};
     }
 
-    deleteNote(id){
+    deleteNoteById(id){
         const index = this._notes.findIndex((note) => note.id === id);
 
         if (index === -1) {
