@@ -71,8 +71,8 @@ async function start() {
                 options: {
                     authenticationService,
                     usersService,
-                    TokenManager: TokenManager,
-                    validator: AuthenticationsValidator
+                    TokenManager,
+                    AuthenticationsValidator
                 }
             }
         ]);
