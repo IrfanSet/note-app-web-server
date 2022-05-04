@@ -26,6 +26,7 @@ class NotesServices {
         const updated_at = created_at;
         
         console.log(owner);
+        console.log(query);
         const query = {
             text: 'insert into notes values($1, $2, $3, $4, $5, $6, $7) returning id',
             values: [id, title, body, tags, created_at, updated_at, owner]
