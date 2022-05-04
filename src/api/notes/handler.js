@@ -20,8 +20,8 @@ class NotesHandler {
                 title = 'untitled', body, tags
             } = request.payload;
 
-            const {id:credentialId} = request.auth.credentials;
-
+            const { id: credentialId } = request.auth.credentials;
+            return request.auth.credentials;
             const noteId = await this._service.addNote({
                 title,
                 body,
