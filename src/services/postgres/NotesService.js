@@ -24,12 +24,12 @@ class NotesServices {
         const id = nanoid(16);
         const created_at = new Date().toISOString();
         const updated_at = created_at;
-
+        
+        console.log(owner);
         const query = {
             text: 'insert into notes values($1, $2, $3, $4, $5, $6, $7) returning id',
             values: [id, title, body, tags, created_at, updated_at, owner]
         }
-        console.log(query);
         const result = await this._pool.query(query);
 
         if (!result.rows[0].id) {
