@@ -20,10 +20,13 @@ class NotesHandler {
                 title = 'untitled', body, tags
             } = request.payload;
 
+            const {id:credentialId} = request.auth.credentials;
+
             const noteId = await this._service.addNote({
                 title,
                 body,
-                tags
+                tags,
+                credentialId
             });
 
             const response = h.response({
@@ -57,14 +60,17 @@ class NotesHandler {
         }
     }
 
-    async getNotesHandler() {
-        const notes = await this._service.getNotes();
-        return {
+    async getNotesHandler(request, h) {
+        const {id:credentialId} = request.auth.credentials;
+        const notes = await this._service.getNotes(credentialId);
+        const response = h.response({
             status: 'success',
             data: {
-                notes,
-            },
-        };
+                notes
+            }
+        });
+        response.code(200);
+        return response;
     }
 
     async getNoteByIdHandler(request, h) {
@@ -72,6 +78,9 @@ class NotesHandler {
             const {
                 id
             } = request.params;
+            const {id:credentialId} = request.auth.credentials;
+            await this._service.verifyNoteOwner(id, credentialId);
+
             const note = await this._service.getNoteById(id);
             return {
                 status: 'success',
@@ -107,6 +116,8 @@ class NotesHandler {
             const {
                 id
             } = request.params;
+            const {id:credentialId} = request.auth.credentials;
+            await this._service.verifyNoteOwner(id, credentialId);
 
             await this._service.editNoteById(id, request.payload);
 
@@ -140,6 +151,10 @@ class NotesHandler {
             const {
                 id
             } = request.params;
+            
+            const {id:credentialId} = request.auth.credentials;
+            await this._service.verifyNoteOwner(id, credentialId);
+
             await this._service.deleteNoteById(id);
             return {
                 status: 'success',

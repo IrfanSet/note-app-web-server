@@ -4,6 +4,7 @@ const {
 const {
     Pool
 } = require('pg');
+const AuthorizationError = require('../../exceptions/AuthorizationError');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const mapDBToModel = require('../../utils');
@@ -16,7 +17,8 @@ class NotesServices {
     async addNote({
         title,
         body,
-        tags
+        tags,
+        owner
     }) {
 
         const id = nanoid(16);
@@ -24,8 +26,8 @@ class NotesServices {
         const updated_at = created_at;
 
         const query = {
-            text: 'insert into notes values($1, $2, $3, $4, $5, $6) returning id',
-            values: [id, title, body, tags, created_at, updated_at]
+            text: 'insert into notes values($1, $2, $3, $4, $5, $6, $7) returning id',
+            values: [id, title, body, tags, created_at, updated_at, owner]
         }
 
         const result = await this._pool.query(query);
@@ -37,8 +39,12 @@ class NotesServices {
         return result.rows[0].id;
     }
 
-    async getNotes() {
-        const result = await this._pool.query('select * from notes');
+    async getNotes(owner) {
+        const query = { 
+            text: 'select * from notes where owner = $1',
+            values: [owner]
+        }
+        const result = await this._pool.query(query);
         
         return result.rows.map(mapDBToModel);
     }
@@ -86,6 +92,25 @@ class NotesServices {
             throw new NotFoundError('Catatan gagal dihapus. Id tidak ditemukan');
         }
         // return result.rows[0].id;
+    }
+
+    async verifyNoteOwner(id, owner){
+        const query = {
+            text: 'select * from notes where id = $1',
+            values: [id]
+        }
+
+        const result = await this._pool.query(query);
+
+        if (!result.rows.length) {
+            throw new NotFoundError('Catatan tidak ditemukan');
+        }
+
+        const note = result.rows[0];
+
+        if (note.owner !== owner) {
+            throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+        }
     }
 }
 
