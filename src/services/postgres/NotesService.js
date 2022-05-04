@@ -18,14 +18,14 @@ class NotesServices {
         title,
         body,
         tags,
-        owner
+        credentialId
     }) {
 
         const id = nanoid(16);
         const created_at = new Date().toISOString();
         const updated_at = created_at;
         
-        console.log(owner);
+        console.log(credentialId);
         console.log(query);
         const query = {
             text: 'insert into notes values($1, $2, $3, $4, $5, $6, $7) returning id',
