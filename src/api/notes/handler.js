@@ -27,6 +27,7 @@ class NotesHandler {
                 tags,
                 credentialId
             });
+            return false;
             const noteId = await this._service.addNote({
                 title,
                 body,
