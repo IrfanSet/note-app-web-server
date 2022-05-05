@@ -57,7 +57,7 @@ class NotesServices {
             text: `SELECT notes.*, users.username
             FROM notes
             LEFT JOIN users ON users.id = notes.owner
-            WHERE notes.id = $1select * from notes where id = $1`,
+            WHERE notes.id = $1`,
             values: [id]
         }
 
