@@ -10,21 +10,22 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const mapDBToModel = require('../../utils');
 
 class NotesServices {
-    constructor() {
+    constructor(collaborationService) {
         this._pool = new Pool;
+        this._collaborationService = collaborationService;
     }
 
     async addNote({
         title,
         body,
         tags,
-        credentialId:owner
+        credentialId: owner
     }) {
 
         const id = nanoid(16);
         const created_at = new Date().toISOString();
         const updated_at = created_at;
-        
+
         const query = {
             text: 'insert into notes values($1, $2, $3, $4, $5, $6, $7) returning id',
             values: [id, title, body, tags, created_at, updated_at, owner]
@@ -39,23 +40,29 @@ class NotesServices {
     }
 
     async getNotes(owner) {
-        const query = { 
-            text: 'select * from notes where owner = $1',
+        const query = {
+            text: `SELECT notes.* FROM notes
+            LEFT JOIN collaborations ON collaborations.note_id = notes.id
+            WHERE notes.owner = $1 OR collaborations.user_id = $1
+            GROUP BY notes.id`,
             values: [owner]
         }
         const result = await this._pool.query(query);
-        
+
         return result.rows.map(mapDBToModel);
     }
 
     async getNoteById(id) {
         const query = {
-            text: 'select * from notes where id = $1',
+            text: `SELECT notes.*, users.username
+            FROM notes
+            LEFT JOIN users ON users.id = notes.owner
+            WHERE notes.id = $1select * from notes where id = $1`,
             values: [id]
         }
 
         const result = await this._pool.query(query);
-        
+
         if (!result.rows.length) {
             throw new NotFoundError('Catatan tidak ditemukan.')
         }
@@ -63,7 +70,11 @@ class NotesServices {
         return result.rows.map(mapDBToModel)[0];
     }
 
-    async editNoteById(id, {title, tags, body}) {
+    async editNoteById(id, {
+        title,
+        tags,
+        body
+    }) {
         const updatedAt = new Date().toISOString();
 
         const query = {
@@ -79,7 +90,7 @@ class NotesServices {
         // return result.rows[0].id;
     }
 
-    async deleteNoteById(id){
+    async deleteNoteById(id) {
         const query = {
             text: 'delete from notes where id=$1 returning id',
             values: [id]
@@ -93,7 +104,7 @@ class NotesServices {
         // return result.rows[0].id;
     }
 
-    async verifyNoteOwner(id, owner){
+    async verifyNoteOwner(id, owner) {
         const query = {
             text: 'select * from notes where id = $1',
             values: [id]
@@ -109,6 +120,21 @@ class NotesServices {
 
         if (note.owner !== owner) {
             throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+        }
+    }
+
+    async verifyNoteAccess(noteId, userId) {
+        try {
+            await this.verifyNoteOwner(noteId, userId);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                throw error;
+            }
+            try {
+                await this._collaborationService.verifyCollaborator(noteId, userId);
+            } catch {
+                throw error;
+            }
         }
     }
 }

@@ -1,4 +1,6 @@
-const { nanoid } = require("nanoid");
+const {
+    nanoid
+} = require("nanoid");
 const {
     Pool
 } = require("pg");
@@ -64,7 +66,7 @@ class UsersService {
         return result.rows[0];
     }
 
-    async verifyUserCredential(username, password){
+    async verifyUserCredential(username, password) {
         const query = {
             text: 'select id, password from users where username = $1',
             values: [username]
@@ -76,7 +78,10 @@ class UsersService {
             throw new AuthenticationError('Kredensial yang Anda berikan salah');
         }
 
-        const {id , password:hashedPassword} = result.rows[0];
+        const {
+            id,
+            password: hashedPassword
+        } = result.rows[0];
 
         const match = await bcrypt.compare(password, hashedPassword);
 
@@ -85,6 +90,15 @@ class UsersService {
         }
 
         return id;
+    }
+
+    async getUsersByUsername(username) {
+        const query = {
+            text: 'SELECT id, username, fullname FROM users WHERE username LIKE $1',
+            values: [`%${username}%`],
+        };
+        const result = await this._pool.query(query);
+        return result.rows;
     }
 }
 

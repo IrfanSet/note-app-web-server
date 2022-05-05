@@ -1,7 +1,8 @@
-const { handler } = require("@hapi/hapi/lib/cors");
+const {
+    handler
+} = require("@hapi/hapi/lib/cors");
 
-const routes = (handler) => [
-    {
+const routes = (handler) => [{
         method: 'POST',
         path: '/users',
         handler: handler.postUserHandler
@@ -10,6 +11,11 @@ const routes = (handler) => [
         method: 'GEt',
         path: '/users/{id}',
         handler: handler.getUserByIdHandler
+    },
+    {
+        method: 'GET',
+        path: '/users',
+        handler: handler.getUsersByUsernameHandler,
     },
 ]
 
