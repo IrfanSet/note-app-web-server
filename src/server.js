@@ -4,6 +4,7 @@ const NotesServices = require('./services/postgres/NotesService');
 const NotesValidator = require('./validator/notes');
 require('dotenv').config();
 const Jwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
 
 // user
 const users = require('./api/users');
@@ -24,7 +25,12 @@ const collaboartionsValidator = require('./validator/collaborations');
 //exports
 const _exports = require('./api/exports');
 const ProducerService = require('./services/rabbitmq/ProducerService');
-const ExportsValidator = require('./validator/exports')  
+const ExportsValidator = require('./validator/exports')
+
+// uploads
+const uploads = require('./api/uploads');
+const StorageService = require('./services/storage/StorageService');
+const UploadsValidator = require('./validator/uploads');
 
 const server = hapi.server({
     port: process.env.PORT,
@@ -41,11 +47,16 @@ async function start() {
         const notesServices = new NotesServices(collaborationsService);
         const usersService = new UsersService();
         const authenticationService = new AuthenticationService();
+        const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
 
 
         await server.register([{
-            plugin: Jwt
-        }, ]);
+                plugin: Jwt
+            },
+            {
+                plugin: Inert,
+            },
+        ]);
         server.auth.strategy('notesapp_jwt', 'jwt', {
             keys: process.env.ACCESS_TOKEN_KEY,
             verify: {
@@ -99,6 +110,13 @@ async function start() {
                     service: ProducerService,
                     validator: ExportsValidator
                 }
+            },
+            {
+                plugin: uploads,
+                options: {
+                    service: storageService,
+                    validator: UploadsValidator,
+                },
             }
         ]);
         await server.start();
